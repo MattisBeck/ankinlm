@@ -41,12 +41,12 @@ export const createStyledButton = (
   return button as HTMLElement;
 };
 
-export const createCsvBlob = (data: string): Blob | undefined => {
+export const createTsvBlob = (data: string): Blob | undefined => {
   const parsedData = JSON.parse(data);
 
   let rows: string[] = [];
 
-  function escapeCsvField(field: string) {
+  function escapeTsvField(field: string) {
     const escaped = field.replace(/"/g, '""');
     if (/[\t\n"]/.test(escaped)) {
       return `"${escaped}"`;
@@ -56,8 +56,8 @@ export const createCsvBlob = (data: string): Blob | undefined => {
 
   if (isFlashcardData(parsedData)) {
     for (const card of parsedData.flashcards) {
-      const front = escapeCsvField(card.f);
-      const back = escapeCsvField(card.b);
+      const front = escapeTsvField(card.f);
+      const back = escapeTsvField(card.b);
       rows.push(`${front}\t${back}`);
     }
   }
@@ -66,13 +66,13 @@ export const createCsvBlob = (data: string): Blob | undefined => {
     for (const quiz of parsedData.quiz) {
       const answer = quiz.answerOptions.find((opt) => opt.isCorrect);
       if (!answer) continue;
-      const question = escapeCsvField(quiz.question);
-      const correct = escapeCsvField(answer.text);
+      const question = escapeTsvField(quiz.question);
+      const correct = escapeTsvField(answer.text);
       rows.push(`${question}\t${correct}`);
     }
   }
 
-  const csv = rows.join('\n');
+  const tsv = rows.join('\n');
   const BOM = '\uFEFF'; // UTF-8
-  return new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
+  return new Blob([BOM + tsv], { type: 'text/tab-separated-values;charset=utf-8' });
 };

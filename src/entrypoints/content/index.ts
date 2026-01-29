@@ -1,4 +1,4 @@
-import { createCsvBlob, createStyledButton } from '@/utils/utils';
+import { createStyledButton, createTsvBlob } from '@/utils/utils';
 
 let contentScriptEntrypoint;
 
@@ -38,7 +38,7 @@ if (import.meta.env.FIREFOX) {
       function handleDownload(url: string) {
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'flashcards.csv';
+        link.download = 'flashcards.tsv';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -46,7 +46,7 @@ if (import.meta.env.FIREFOX) {
       }
 
       function handleNotebookLMData(data: string) {
-        const blob = createCsvBlob(data);
+        const blob = createTsvBlob(data);
         if (!blob || !footerContainer) return;
 
         const copyBtn = createStyledButton(footerContainer, 'Copy', 'copy_all');
