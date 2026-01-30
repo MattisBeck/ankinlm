@@ -46,6 +46,84 @@ export const createTsvBlob = (data: string): Blob | undefined => {
 
   let rows: string[] = [];
 
+  function normalizeMathJax(text: string) {
+    if (!text) return text;
+    let result = '';
+    let i = 0;
+
+    const mathSignalRegex = /\\[A-Za-z]+|[=<>^_+\-*/|{}\[\]()]/;
+    const currencyRegex = /^[+-]?\d[\d\s.,]*(?:%|[kKmMbB])?$/;
+
+    const shouldConvertInline = (content: string) => {
+      const trimmed = content.trim();
+      if (!trimmed) return false;
+      if (currencyRegex.test(trimmed)) return false;
+      if (mathSignalRegex.test(trimmed)) return true;
+      return /[A-Za-z]/.test(trimmed);
+    };
+
+    const emit = (content: string, isDisplay: boolean) => {
+      if (isDisplay) return `\\[${content}\\]`;
+      if (shouldConvertInline(content)) return `\\(${content}\\)`;
+      return `$${content}$`;
+    };
+
+    while (i < text.length) {
+      const ch = text[i];
+      if (ch === '\\') {
+        if (i + 1 < text.length && text[i + 1] === '$') {
+          result += '\\$';
+          i += 2;
+          continue;
+        }
+        result += ch;
+        i += 1;
+        continue;
+      }
+
+      if (ch === '$') {
+        const isDisplay = i + 1 < text.length && text[i + 1] === '$';
+        const start = i;
+        let j = i + (isDisplay ? 2 : 1);
+
+        while (j < text.length) {
+          if (text[j] === '\\') {
+            j += 2;
+            continue;
+          }
+          if (text[j] === '$') {
+            if (isDisplay) {
+              if (j + 1 < text.length && text[j + 1] === '$') {
+                const content = text.slice(i + 2, j);
+                result += emit(content, true);
+                i = j + 2;
+                break;
+              }
+              j += 1;
+              continue;
+            }
+            const content = text.slice(i + 1, j);
+            result += emit(content, false);
+            i = j + 1;
+            break;
+          }
+          j += 1;
+        }
+
+        if (i === start) {
+          result += '$';
+          i += 1;
+        }
+        continue;
+      }
+
+      result += ch;
+      i += 1;
+    }
+
+    return result;
+  }
+
   function escapeTsvField(field: string) {
     const escaped = field.replace(/"/g, '""');
     if (/[\t\n"]/.test(escaped)) {
@@ -56,8 +134,8 @@ export const createTsvBlob = (data: string): Blob | undefined => {
 
   if (isFlashcardData(parsedData)) {
     for (const card of parsedData.flashcards) {
-      const front = escapeTsvField(card.f);
-      const back = escapeTsvField(card.b);
+      const front = escapeTsvField(normalizeMathJax(card.f));
+      const back = escapeTsvField(normalizeMathJax(card.b));
       rows.push(`${front}\t${back}`);
     }
   }
@@ -66,8 +144,8 @@ export const createTsvBlob = (data: string): Blob | undefined => {
     for (const quiz of parsedData.quiz) {
       const answer = quiz.answerOptions.find((opt) => opt.isCorrect);
       if (!answer) continue;
-      const question = escapeTsvField(quiz.question);
-      const correct = escapeTsvField(answer.text);
+      const question = escapeTsvField(normalizeMathJax(quiz.question));
+      const correct = escapeTsvField(normalizeMathJax(answer.text));
       rows.push(`${question}\t${correct}`);
     }
   }
