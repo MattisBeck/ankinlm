@@ -54,7 +54,7 @@ rm -rf node_modules && npm install
    npm run build:firefox    # Firefox
    ```
    - Takes ~2-3 seconds
-   - Output in `.output/chrome-mv3/` (261 KB) or `.output/firefox-mv2/` (259 KB)
+   - Output in `.output/chrome-mv3/` or `.output/firefox-mv2/`
    - Warning about `manifest.manifest_version` is expected and can be ignored
    - Always succeeds if `npm install` was run
 
@@ -64,7 +64,7 @@ rm -rf node_modules && npm install
    npm run zip:firefox      # Firefox
    ```
    - Automatically runs build first
-   - Creates `.output/wxt-react-starter-1.2-chrome.zip` (~104 KB)
+   - Creates `.output/wxt-react-starter-1.2-chrome.zip` (Note: filename uses package.json name, not the extension display name)
    - Takes ~3 seconds total
 
 ### Build Validation Sequence
